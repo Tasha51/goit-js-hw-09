@@ -4,10 +4,10 @@ import "flatpickr/dist/flatpickr.min.css";
 const startBtn = document.querySelector('[data-start]');
 const inputEl = document.querySelector('#datetime-picker')
 const refs = {
-    daysSpan: clock.querySelector('[data-days]'),
-    hoursSpan: clock.querySelector('[data-hours]'),
-    minutesSpan: clock.querySelector('[data-minutes]'),
-    secondsSpan: clock.querySelector('[data-seconds]'),
+    daysSpan: document.querySelector('[data-days]'),
+    hoursSpan: document.querySelector('[data-hours]'),
+    minutesSpan: document.querySelector('[data-minutes]'),
+    secondsSpan: document.querySelector('[data-seconds]'),
 };
 
 startBtn.disabled = true;
@@ -18,29 +18,41 @@ const options = {
     defaultDate: new Date(),
     minuteIncrement: 1,
     onClose(selectedDates) {
+        const deadline = new Date();
         console.log(selectedDates[0]);
-        if (selectedDates[0] <= defaultDate) {
+        if (selectedDates[0] <= deadline) {
             return window.alert("Please choose a date in the future");
-        } else {
-            startBtn.addEventListener('click', startCountdownTime(() => { timerId = setInterval(() => {
-                const diff = selectedDates[0] - defaultDate;
+        } 
+        startBtn.addEventListener('click', startCountdown)
+        startBtn.disabled = false;  
+
+        function startCountdown() {
+            timerId = setInterval(() => {
+                const diff = selectedDates[0] - deadline;
+                if (diff <= 0)
+                {
+                   return
+                }
+                convertMs(diff);
+                changeDateOnClock(diff);
                 console.log(diff);
-                const time = convertMs(diff);
-                changeDateOnClock(time);
             }, 1000);
-        startBtn.disabled = false;    
-        }))
-      }
+            if (Date.parse(inputEl.value) <= 0)
+                {
+                    clearInterval(timerId);
+                }
+        }  
+        
     },
 }
 
 flatpickr(inputEl, options); 
 
-function changeDateOnClock({ days, hours, minutes, seconds }) {
-    refs.daysSpan.textContent = `${days}`;
-    refs.hoursSpan.textContent = `${hours}`;
-    refs.minutesSpan.textContent = `${minutes}`;
-    refs.secondsSpan.textContent = `${seconds}`;
+function changeDateOnClock(time) {
+    refs.daysSpan.textContent = addLeadingZero(convertMs(time).days);
+    refs.hoursSpan.textContent = addLeadingZero(convertMs(time).hours);
+    refs.minutesSpan.textContent = addLeadingZero(convertMs(time).minutes);
+    refs.secondsSpan.textContent = addLeadingZero(convertMs(time).seconds);
 }
 
 function convertMs(ms) {
@@ -62,4 +74,8 @@ function convertMs(ms) {
   return { days, hours, minutes, seconds };
     // refs.daysSpan.textContent = days;
 
- }
+}
+ 
+function addLeadingZero(value) {
+    return String(value).padStart(2, '0');
+}
