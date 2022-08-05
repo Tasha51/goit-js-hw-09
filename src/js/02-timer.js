@@ -1,6 +1,8 @@
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 
+import Notiflix from 'notiflix';
+
 const startBtn = document.querySelector('[data-start]');
 const inputEl = document.querySelector('#datetime-picker')
 const refs = {
@@ -10,50 +12,50 @@ const refs = {
     secondsSpan: document.querySelector('[data-seconds]'),
 };
 
+
+let today = new Date();
+// console.log(today);
+let intervalId = null;
+
 startBtn.disabled = true;
 
 const options = {
     enableTime: true,
     time_24hr: true,
-    defaultDate: new Date(),
+    defaultDate: today,
     minuteIncrement: 1,
     onClose(selectedDates) {
-        const deadline = new Date();
-        console.log(selectedDates[0]);
-        if (selectedDates[0] <= deadline) {
-            return window.alert("Please choose a date in the future");
+        const deadline = selectedDates[0]
+        console.log(deadline);
+        if (deadline <= today) {
+            return Notiflix.Notify.info("Please choose a date in the future");
         } 
         startBtn.addEventListener('click', startCountdown)
         startBtn.disabled = false;  
 
         function startCountdown() {
-            timerId = setInterval(() => {
-                const diff = selectedDates[0] - deadline;
-                if (diff <= 0)
-                {
-                   return
-                }
-                convertMs(diff);
-                changeDateOnClock(diff);
-                console.log(diff);
+            intervalId = setInterval(() => {
+                const diff = deadline - new Date();
+                if (diff <= 0) {
+                    console.log("Stop timer");
+                    clearInterval(intervalId);
+                } else {
+                const time = convertMs(diff);
+                console.log(time);
+                refs.daysSpan.textContent = addLeadingZero(time.days);
+                refs.hoursSpan.textContent = addLeadingZero(time.hours);
+                refs.minutesSpan.textContent = addLeadingZero(time.minutes);
+                refs.secondsSpan.textContent = addLeadingZero(time.seconds);
+                };
             }, 1000);
-            if (Date.parse(inputEl.value) <= 0)
-                {
-                    clearInterval(timerId);
-                }
         }  
         
     },
 }
 
+
 flatpickr(inputEl, options); 
 
-function changeDateOnClock(time) {
-    refs.daysSpan.textContent = addLeadingZero(convertMs(time).days);
-    refs.hoursSpan.textContent = addLeadingZero(convertMs(time).hours);
-    refs.minutesSpan.textContent = addLeadingZero(convertMs(time).minutes);
-    refs.secondsSpan.textContent = addLeadingZero(convertMs(time).seconds);
-}
 
 function convertMs(ms) {
   // Number of milliseconds per unit of time
@@ -70,7 +72,8 @@ function convertMs(ms) {
   const minutes = Math.floor(((ms % day) % hour) / minute);
   // Remaining seconds
   const seconds = Math.floor((((ms % day) % hour) % minute) / second);
-
+  
+    // console.log({ days, hours, minutes, seconds });
   return { days, hours, minutes, seconds };
     // refs.daysSpan.textContent = days;
 
